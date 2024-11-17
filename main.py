@@ -2,8 +2,8 @@ import streamlit as st
 from get_data import get_stock_data
 
 st.set_page_config(layout="wide")
-st.title("main")
-st.sidebar.title("Config")
+st.title("Ticker info")
+st.sidebar.title("DCF Config")
 
 # Required Rate slider
 required_rate = st.sidebar.slider(
@@ -92,12 +92,43 @@ if ticker:
         st.subheader(":sparkles: Key Metrics")
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Assets", f"${stock_data.get('totalAssets', 'N/A'):,}")
-            st.metric("Total Liabilities", f"${stock_data.get('totalLiabilities', 'N/A'):,}")
-            st.metric("Shares Outstanding", f"{stock_data.get('sharesOutstanding', 'N/A'):,}")
+            total_assets = stock_data.get('totalAssets', None)
+            total_liabilities = stock_data.get('totalLiabilities', None)
+            shares_outstanding = stock_data.get('sharesOutstanding', None)
+
+            if total_assets is not None:
+                st.metric("Total Assets", f"${total_assets:,.2f}")
+            else:
+                st.metric("Total Assets", "N/A")
+
+            if total_liabilities is not None:
+                st.metric("Total Liabilities", f"${total_liabilities:,.2f}")
+            else:
+                st.metric("Total Liabilities", "N/A")
+            
+            if shares_outstanding is not None:
+                st.metric("Shares Outstanding", f"${shares_outstanding:,.2f}")
+            else:
+                st.metric("Shares Outstanding", "N/A")
+            
         with col2:
-            st.metric("Trailing PE", f"{stock_data.get('trailingPE', 'N/A'):.2f}")
-            st.metric("Forward PE", f"{stock_data.get('forwardPE', 'N/A'):.2f}")
-            st.metric("Book Value", f"${stock_data.get('bookValue', 'N/A'):.2f}")
+            trailing_pe = stock_data.get('trailingPE', None)
+            forward_pe = stock_data.get('forwardPE', None)
+            book_value = stock_data.get('bookValue', None)
+            
+            if trailing_pe is not None:
+                st.metric("Trailing PE", f"{trailing_pe:.2f}")
+            else:
+                st.metric("Trailing PE", "N/A")
+
+            if forward_pe is not None:
+                st.metric("Forward PE", f"{forward_pe:.2f}")
+            else:
+                st.metric("Forward PE", "N/A")
+
+            if book_value is not None:
+                st.metric("Book Value", f"{book_value:.2f}")
+            else:
+                st.metric("Book Value", "N/A")
 
 

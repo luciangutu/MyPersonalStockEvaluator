@@ -22,10 +22,12 @@ def get_stock_data(stock_ticker: str) -> dict:
         if balance_sheet is not None and not balance_sheet.empty:
             logging.info(f'{balance_sheet=}')
             total_assets = safe_round(balance_sheet.loc['TotalAssets', :].iloc[0])
-            total_liabilities_short = safe_round(balance_sheet.loc['TotalLiabilitiesNetMinorityInterest', :].iloc[0])
-            total_liabilities_long = safe_round(balance_sheet.loc['TotalNonCurrentLiabilitiesNetMinorityInterest', :].iloc[0])
+            
+            total_liabilities_short = safe_round(balance_sheet.loc['TotalLiabilitiesNetMinorityInterest', :].iloc[0]) if 'TotalLiabilitiesNetMinorityInterest' in balance_sheet.index else None
+            total_liabilities_long = safe_round(balance_sheet.loc['TotalNonCurrentLiabilitiesNetMinorityInterest', :].iloc[0]) if 'TotalNonCurrentLiabilitiesNetMinorityInterest' in balance_sheet.index else None
+            
+            stock_info['totalAssets'] = total_assets if total_assets is not None else None
 
-            stock_info['totalAssets'] = round(total_assets)
             stock_info['totalLiabilities'] = (
                 total_liabilities_short + total_liabilities_long
                 if total_liabilities_short is not None and total_liabilities_long is not None
@@ -44,6 +46,7 @@ def get_stock_data(stock_ticker: str) -> dict:
         ]
         for field in info_fields:
             stock_info[field] = stock.info.get(field, None)
+            logging.info(f'{field}={stock_info[field]}')
 
         # Additional Financials with Default Handling
         stock_info['grossProfits'] = safe_round(stock.info.get('grossProfits', 0))
