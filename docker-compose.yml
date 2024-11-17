@@ -1,0 +1,11 @@
+services:
+  stock_valuator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock_valuator
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    restart: unless-stopped
