@@ -1,10 +1,7 @@
-Build Docker image
+Build Docker image and start the container
 ```shell
-docker build -t stock_valuator .
+COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build -d && docker-compose logs -f
 ```
 
 
-Start the container
-```shell
-docker run -d -p 8051:8051 stock_valuator --name stock_valuator
-```
+Access the [Web UI](http://localhost:8051)
