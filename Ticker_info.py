@@ -38,8 +38,10 @@ cash_flow_growth_rate = st.sidebar.slider(
     key="cash_flow_growth_rate"
 )
 
-ticker = st.text_input("Enter stock ticker", placeholder="e.g., MSFT")
+ticker = st.text_input("Enter stock ticker", placeholder="e.g., MSFT", value=st.session_state.get("ticker", ""))
 if ticker:
+    if "ticker" not in st.session_state:
+        st.session_state.ticker = ticker
     stock_data = get_stock_data(ticker)
     if "error" in stock_data:
         st.error(stock_data["error"])

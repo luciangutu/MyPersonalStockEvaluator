@@ -61,8 +61,23 @@ def display_stocks_table():
             
             return styles
 
-        # Display the table with styling
-        st.dataframe(df.style.apply(color_row, axis=1), height=1000)
+        # Add hyperlinks for tickers
+        df["Stock Ticker"] = df["Stock Ticker"].apply(
+            lambda x: f'<a href="Charts?ticker={x}">{x}</a>'
+        )
+
+        # Style the DataFrame
+        styled_df = (
+            df.style.apply(color_row, axis=1)
+            .set_properties(subset=["Stock Ticker"], **{"text-decoration": "none"})  # Prevent hyperlink formatting issues
+        )
+
+        # Render with HTML
+        st.write(
+            styled_df.to_html(escape=False),
+            unsafe_allow_html=True,
+        )
+
     else:
         st.write("No stocks in the list.")
 
