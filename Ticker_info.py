@@ -73,20 +73,62 @@ if ticker:
             # Positives and Negatives
             st.subheader(":white_check_mark: Positives")
             positives = []
+
+            # Income Statement
             if stock_data.get("earningsQuarterlyGrowth") is not None and stock_data["earningsQuarterlyGrowth"] > 0:
                 positives.append(f"Earnings Quarterly Growth: {stock_data['earningsQuarterlyGrowth'] * 100:.2f}%")
             if stock_data.get("grossProfits") is not None and stock_data["grossProfits"] > 0:
                 positives.append(f"Gross Profits: ${stock_data['grossProfits']:,}")
+            if stock_data.get("netIncomeToCommon") is not None and stock_data["netIncomeToCommon"] > 0:
+                positives.append(f"Net Income: ${stock_data['netIncomeToCommon']:,}")
+
+            # Cash Flow Statement
             if stock_data.get("freeCashflow") is not None and stock_data["freeCashflow"] > 0:
                 positives.append(f"Free Cash Flow: ${stock_data['freeCashflow']:,}")
+            if stock_data.get("operatingCashflow") is not None and stock_data["operatingCashflow"] > 0:
+                positives.append(f"Operating Cash Flow: ${stock_data['operatingCashflow']:,}")
+
+            # Balance Sheet
+            if stock_data.get("totalCash") is not None and stock_data["totalCash"] > 0:
+                positives.append(f"Total Cash: ${stock_data['totalCash']:,}")
+            if stock_data.get("currentRatio") is not None and stock_data["currentRatio"] >= 1.5:
+                positives.append(f"Healthy Current Ratio: {stock_data['currentRatio']:.2f}")
+
+            # Return on Equity (ROE)
+            if stock_data.get("returnOnEquity") is not None and stock_data["returnOnEquity"] > 0.15:
+                positives.append(f"Strong ROE: {stock_data['returnOnEquity'] * 100:.2f}%")
+
+            # Return on Investment (ROI)
+            if stock_data.get("returnOnInvestment") is not None and stock_data["returnOnInvestment"] > 0.10:
+                positives.append(f"Good ROI: {stock_data['returnOnInvestment'] * 100:.2f}%")
+
             st.write("\n\n".join(positives) if positives else "No notable positives.")
 
             st.subheader(":heavy_exclamation_mark: Negatives")
             negatives = []
+
+            # Income Statement
+            if stock_data.get("trailingEps") is not None and float(stock_data["trailingEps"]) < 2:
+                negatives.append(f"Low EPS: {stock_data['trailingEps']}")
+            if stock_data.get("revenueGrowth") is not None and stock_data["revenueGrowth"] < 0:
+                negatives.append(f"Declining Revenue Growth: {stock_data['revenueGrowth'] * 100:.2f}%")
+
+            # Balance Sheet
             if stock_data.get("debtToEquity") is not None and float(stock_data["debtToEquity"]) > 100:
                 negatives.append(f"High Debt-to-Equity: {stock_data['debtToEquity']}")
-            if stock_data.get("priceToBook") is not None and float(stock_data["priceToBook"]) > 1.5:
-                negatives.append(f"Price-to-Book is high: {stock_data['priceToBook']:.2f}")
+
+            # Cash Flow Statement
+            if stock_data.get("freeCashflow") is not None and stock_data["freeCashflow"] < 0:
+                negatives.append(f"Negative Free Cash Flow: ${stock_data['freeCashflow']:,}")
+
+            # Return on Equity (ROE)
+            if stock_data.get("returnOnEquity") is not None and stock_data["returnOnEquity"] < 0.05:
+                negatives.append(f"Low ROE: {stock_data['returnOnEquity'] * 100:.2f}%")
+
+            # Return on Investment (ROI)
+            if stock_data.get("returnOnInvestment") is not None and stock_data["returnOnInvestment"] < 0.05:
+                negatives.append(f"Poor ROI: {stock_data['returnOnInvestment'] * 100:.2f}%")
+
             st.write("\n\n".join(negatives) if negatives else "No notable negatives.")
 
         st.divider()

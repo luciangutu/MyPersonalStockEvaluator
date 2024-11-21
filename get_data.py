@@ -42,7 +42,7 @@ def get_stock_data(stock_ticker: str) -> dict:
             'regularMarketPreviousClose', 'sharesOutstanding', 'trailingPE', 'forwardPE',
             'priceToSalesTrailing12Months', 'bookValue', 'priceToBook', 'earningsQuarterlyGrowth',
             'trailingEps', 'forwardEps', 'pegRatio', 'totalRevenue', 'totalDebt', 'debtToEquity',
-            'revenuePerShare'
+            'revenuePerShare', 'returnOnEquity', 'returnOnInvestment'
         ]
         for field in info_fields:
             stock_info[field] = stock.info.get(field, None)
