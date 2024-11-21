@@ -6,5 +6,5 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["streamlit", "run", "Ticker_info.py", "--browser.gatherUsageStats", "false"]
+CMD ["streamlit", "run", "Ticker_data.py", "--browser.gatherUsageStats", "false"]
 
