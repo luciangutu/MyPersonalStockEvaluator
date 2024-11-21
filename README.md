@@ -9,5 +9,5 @@ Access the [Web UI](http://localhost:8051)
 
 
 ## What's next
-- local DB for my stocks to watch (CRUD) and a page for displaying a list of the stocks with DCF
 - alternative stock evaluation methods
+- metrics evaluation
