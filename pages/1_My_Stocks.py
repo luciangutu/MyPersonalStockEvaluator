@@ -1,8 +1,10 @@
+from db import create_db, add_stock, remove_stock, get_all_stocks_from_db
+from Ticker_data import safe_round
+from dcf import dcf
 import streamlit as st
 import pandas as pd
-from dcf import dcf
-from get_data import get_stock_data
-from db import create_db, add_stock, remove_stock, get_all_stocks
+import yfinance as yf
+
 
 create_db()
 st.set_page_config(layout="wide")
@@ -26,15 +28,25 @@ def remove_stock_from_db():
 
 # Display stock table with color coding for undervalued/overvalued
 def display_stocks_table():
-    stocks = get_all_stocks()
+    stocks = get_all_stocks_from_db()
 
     if stocks:
         data = []
         for stock in stocks:
             ticker = stock[0]
-            stock_data = get_stock_data(ticker)
-            current_price = stock_data.get("currentPrice", 0)
-            dcf_value = stock_data.get("dcf", 0)
+
+            ystock = yf.Ticker(ticker)
+            info = ystock.info
+            cashflow = ystock.cashflow
+
+
+            current_price = info.get("currentPrice", 0)
+            free_cash_flow_data = cashflow.loc['Free Cash Flow'].tail(4)
+            free_cash_flow = [
+                safe_round(item) for item in free_cash_flow_data if item is not None
+            ]
+            free_cash_flow.reverse()  
+            dcf_value = dcf(free_cash_flow, info['sharesOutstanding'])
 
             row = {
                 "Stock Ticker": ticker,

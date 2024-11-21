@@ -35,7 +35,7 @@ def remove_stock(ticker):
     conn.commit()
     conn.close()
 
-def get_all_stocks():
+def get_all_stocks_from_db():
     conn = sqlite3.connect('stocks.db')
     cursor = conn.cursor()
     
