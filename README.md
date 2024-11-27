@@ -9,5 +9,6 @@ Access the [Web UI](http://localhost:8051)
 
 
 ## What's next
-- alternative stock evaluation methods
+- alternative stock evaluation methods to DCF
 - metrics evaluation
+- key metrics page

@@ -1,7 +1,6 @@
 from dcf import dcf
 import streamlit as st
 import yfinance as yf
-import pandas as pd
 import logging
 import math
 
@@ -29,7 +28,7 @@ required_rate = st.sidebar.slider(
     "Required Rate (%)",
     min_value=5,
     max_value=12,
-    value=st.session_state.get("required_rate", 7),
+    value=st.session_state.get("required_rate", 6),
     step=1,
     help="The required rate of return (discount rate) typically reflects the Weighted Average Cost of Capital (WACC) or the investor's hurdle rate.",
     key="required_rate"
@@ -57,10 +56,23 @@ cash_flow_growth_rate = st.sidebar.slider(
     key="cash_flow_growth_rate"
 )
 
-ticker = st.text_input("Enter stock ticker", placeholder="e.g., MSFT", value=st.session_state.get("ticker", ""))
+
+if "ticker" not in st.session_state:
+    st.session_state.ticker = ""
+
+def update_ticker():
+    st.session_state.ticker = st.session_state.input_ticker
+
+ticker = st.text_input(
+    "Enter stock ticker", 
+    placeholder="e.g., MSFT", 
+    value=st.session_state.ticker, 
+    key="input_ticker",
+    on_change=update_ticker,
+)
+
 if ticker:
-    if "ticker" not in st.session_state:
-        st.session_state.ticker = ticker
+    st.session_state.ticker = ticker
 
     stock = yf.Ticker(ticker)
 
@@ -71,8 +83,9 @@ if ticker:
 
     st.subheader(f":coffee: {info.get('longName', ticker)}")
 
+    # logging.info(dir(stock))
 
-# INFO
+# INFO #######################################################################
     st.subheader(":sparkles: Info Metrics")
 
     # Create Info table structure
@@ -88,8 +101,6 @@ if ticker:
     """
 
     table_rows = []
-
-
     info_dict = info
 
     # DCF
@@ -99,7 +110,6 @@ if ticker:
     ]
     free_cash_flow.reverse()  
     info_dict['dcf'] = dcf(free_cash_flow, info['sharesOutstanding'])
-
 
     # Iterate over metrics and populate the table
     for metric in list(info_dict.keys()):
@@ -115,6 +125,10 @@ if ticker:
         elif metric == "trailingPegRatio" and value < 1:
             table_rows.append(format_table_row(metric, f"{value:.2f}", True))
         elif metric == "trailingPegRatio" and value > 2:
+            table_rows.append(format_table_row(metric, f"{value:.2f}", False))
+        elif metric == "priceToSalesTrailing12Months" and value < 1:
+            table_rows.append(format_table_row(metric, f"{value:.2f}", True))
+        elif metric == "priceToSalesTrailing12Months" and value > 2:
             table_rows.append(format_table_row(metric, f"{value:.2f}", False))
         elif metric == "operatingMargins" and value > 0.20:
             table_rows.append(format_table_row(metric, f"{value * 100:.2f}%", True))
@@ -141,7 +155,7 @@ if ticker:
     st.divider()
 
 
-# Balance Sheet
+# Balance Sheet #######################################################################
     st.subheader(":sparkles: Balance Sheet Metrics")
 
     # Create Info table structure
@@ -151,7 +165,6 @@ if ticker:
     <tr style="border-bottom:2px solid black;">
     <th style="text-align:left;">Metric</th>
     <th style="text-align:left;">Value</th>
-    <th style="text-align:left;">Description</th>
     </tr>
     </thead>
     <tbody>
@@ -186,7 +199,7 @@ if ticker:
 
     st.divider()
 
-# Financials
+# Financials #######################################################################
     st.subheader(":sparkles: Financials Metrics")
 
     # Create Info table structure
@@ -196,13 +209,27 @@ if ticker:
     <tr style="border-bottom:2px solid black;">
     <th style="text-align:left;">Metric</th>
     <th style="text-align:left;">Value</th>
-    <th style="text-align:left;">Description</th>
     </tr>
     </thead>
     <tbody>
     """
-
     table_rows = []
+    try:
+        sales_growth_1y = (financials.loc['Total Revenue'].iloc[0] / financials.loc['Total Revenue'].iloc[1] - 1) * 100
+        sales_growth_3y = (financials.loc['Total Revenue'].iloc[0] / financials.loc['Total Revenue'].iloc[3] - 1) * 100
+    except KeyError:
+        sales_growth_1y = sales_growth_3y = 0
+
+    try:
+        operating_margin = (financials.loc['Operating Income'].iloc[0] / financials.loc['Total Revenue'].iloc[0]) * 100
+    except KeyError:
+        operating_margin = 0
+
+    calculated_metrics = {
+        'Sales Growth 1Y': f'{sales_growth_1y:.2f}%',
+        'Sales Growth 3Y': f'{sales_growth_3y:.2f}%',
+        'Operating Margin': f'{operating_margin:.2f}%',
+    }
 
     # Iterate over metrics and populate the table
     for metric in financials.index.tolist():
@@ -212,7 +239,6 @@ if ticker:
                 value = 0
         except KeyError:
             value = 0
-
 
         # Add positivity/negativity logic for specific metrics
         if metric == "trailingPE" and (10 <= value <= 20):
@@ -225,6 +251,10 @@ if ticker:
             # Default handling for metrics without specific thresholds
             value_formatted = f"${value:,}" if isinstance(value, (int, float)) and value > 1e3 else str(value)
             table_rows.append(format_table_row(metric, value_formatted, is_positive=None))
+
+    # Add the calculated metrics to the table rows
+    for metric, value in calculated_metrics.items():
+        table_rows.append(format_table_row(metric, value, is_positive=None))
 
     # Close table structure
     table_footer = "</tbody></table>"
@@ -244,7 +274,6 @@ if ticker:
     <tr style="border-bottom:2px solid black;">
     <th style="text-align:left;">Metric</th>
     <th style="text-align:left;">Value</th>
-    <th style="text-align:left;">Description</th>
     </tr>
     </thead>
     <tbody>

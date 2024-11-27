@@ -7,7 +7,6 @@ import yfinance as yf
 
 
 create_db()
-st.set_page_config(layout="wide")
 
 # Add stock function
 def add_stock_to_db():

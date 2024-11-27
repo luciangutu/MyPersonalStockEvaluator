@@ -1,4 +1,8 @@
 import streamlit as st
+import logging
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def dcf(free_cash_flow: list[int], shares_outstanding: int) -> float:
@@ -12,7 +16,7 @@ def dcf(free_cash_flow: list[int], shares_outstanding: int) -> float:
     if not free_cash_flow or shares_outstanding <= 0:
         raise ValueError("Invalid input: free_cash_flow must be a non-empty list, and shares_outstanding must be positive.")
 
-    required_rate = st.session_state.get('required_rate', 7) / 100
+    required_rate = st.session_state.get('required_rate', 6) / 100
     perpetual_rate = st.session_state.get('perpetual_rate', 2) / 100
     cash_flow_growth_rate = st.session_state.get('cash_flow_growth_rate', 3) / 100
 
