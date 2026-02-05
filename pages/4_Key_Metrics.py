@@ -1,5 +1,5 @@
 import streamlit as st
-import yfinance as yf
+import fmp_client as yf
 
 
 st.set_page_config(layout="wide")

@@ -3,7 +3,7 @@ from Ticker_data import safe_round
 from dcf import dcf
 import streamlit as st
 import pandas as pd
-import yfinance as yf
+import fmp_client as yf
 
 
 create_db()
@@ -38,14 +38,17 @@ def display_stocks_table():
             info = ystock.info
             cashflow = ystock.cashflow
 
-
             current_price = info.get("currentPrice", 0)
-            free_cash_flow_data = cashflow.loc['Free Cash Flow'].tail(4)
-            free_cash_flow = [
-                safe_round(item) for item in free_cash_flow_data if item is not None
-            ]
-            free_cash_flow.reverse()  
-            dcf_value = dcf(free_cash_flow, info['sharesOutstanding'])
+
+            try:
+                free_cash_flow_data = cashflow.loc['Free Cash Flow'].tail(4)
+                free_cash_flow = [
+                    safe_round(item) for item in free_cash_flow_data if item is not None
+                ]
+                free_cash_flow.reverse()
+                dcf_value = dcf(free_cash_flow, info.get('sharesOutstanding', 0))
+            except (KeyError, IndexError):
+                dcf_value = 0
 
             row = {
                 "Stock Ticker": ticker,
@@ -96,10 +99,33 @@ def display_stocks_table():
 st.title("Stock Portfolio")
 
 # Add or Remove Stock
-st.header("Add or Remove Stocks")
-add_stock_to_db()
-remove_stock_from_db()
+st.header("Manage Stocks")
 
-# Display Stocks
-st.header("Your Stock List")
-display_stocks_table()
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("➕ Add Stock")
+    add_stock_to_db()
+
+with col2:
+    st.subheader("🗑️ Remove Stock")
+    remove_stock_from_db()
+
+st.divider()
+
+# Display Stocks - only when button is clicked
+st.header("Portfolio Valuation")
+st.info("⚠️ Loading portfolio will consume API calls. Use cache when possible.")
+
+if st.button("📊 Load Portfolio & Calculate DCF", type="primary"):
+    with st.spinner("Loading portfolio data..."):
+        display_stocks_table()
+else:
+    # Show list of stocks without making API calls
+    stocks = get_all_stocks_from_db()
+    if stocks:
+        st.write(f"**{len(stocks)} stocks in portfolio:**")
+        stock_list = ", ".join([stock[0] for stock in stocks])
+        st.code(stock_list)
+    else:
+        st.write("No stocks in portfolio.")

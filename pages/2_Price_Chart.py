@@ -1,4 +1,4 @@
-import yfinance as yf
+import fmp_client as yf
 import streamlit as st
 import plotly.graph_objects as go
 

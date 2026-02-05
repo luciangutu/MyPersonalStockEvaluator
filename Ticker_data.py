@@ -1,6 +1,6 @@
 from dcf import dcf
 import streamlit as st
-import yfinance as yf
+import fmp_client as yf
 import logging
 import math
 
@@ -77,6 +77,16 @@ if ticker:
     stock = yf.Ticker(ticker)
 
     info = stock.info
+
+    # Check if we got any data
+    if not info or len(info) == 0:
+        st.error(f"❌ Nu s-au putut obtine date pentru {ticker}. Posibile cauze:")
+        st.write("- Stock-ul nu este disponibil in planul FMP free tier")
+        st.write("- API key-ul este invalid sau a expirat")
+        st.write("- Ai depasit limita de 250 requests/zi")
+        st.write("Stock-uri disponibile gratuit: AAPL, TSLA, AMZN, GOOGL, MSFT (limitat)")
+        st.stop()
+
     balance_sheet = stock.balance_sheet
     financials = stock.financials
     cashflow = stock.cashflow
@@ -104,15 +114,28 @@ if ticker:
     info_dict = info
 
     # DCF
-    free_cash_flow_data = cashflow.loc['Free Cash Flow'].tail(4)
-    free_cash_flow = [
-        safe_round(item) for item in free_cash_flow_data if item is not None
-    ]
-    free_cash_flow.reverse()  
-    info_dict['dcf'] = dcf(free_cash_flow, info['sharesOutstanding'])
+    try:
+        free_cash_flow_data = cashflow.loc['Free Cash Flow'].tail(4)
+        free_cash_flow = [
+            safe_round(item) for item in free_cash_flow_data if item is not None
+        ]
+        free_cash_flow.reverse()
+        shares = info.get('sharesOutstanding', 0)
+        if len(free_cash_flow) > 0 and shares > 0:
+            info_dict['dcf'] = dcf(free_cash_flow, shares)
+        else:
+            logging.warning(f"DCF calculation skipped: free_cash_flow={len(free_cash_flow)} items, shares={shares}")
+            info_dict['dcf'] = 0
+    except (KeyError, IndexError, ValueError) as e:
+        logging.warning(f"Free Cash Flow data not available for {ticker}. Error: {e}")
+        info_dict['dcf'] = 0
 
     # Iterate over metrics and populate the table
     for metric in list(info_dict.keys()):
+        # Skip description - will be shown separately
+        if metric == "description":
+            continue
+
         value = info_dict.get(metric, 0)
         if value is None:
             value = 0
@@ -134,10 +157,9 @@ if ticker:
             table_rows.append(format_table_row(metric, f"{value * 100:.2f}%", True))
         elif metric == "operatingMargins" and value < 0.10:
             table_rows.append(format_table_row(metric, f"{value * 100:.2f}%", False))
-        elif metric == "dcf" and value > info['currentPrice']:
+        elif metric == "dcf" and value > info.get('currentPrice', 0):
             table_rows.append(format_table_row(metric, value, True))
-        elif metric == "dcf" and value < info['currentPrice']:
-            # percentage_diff = ((value - info['currentPrice']) / info['currentPrice']) * 100
+        elif metric == "dcf" and value < info.get('currentPrice', float('inf')):
             table_rows.append(format_table_row(metric, value, False))
         elif metric == "earningsQuarterlyGrowth" and value > 0:
             table_rows.append(format_table_row(metric, value, True))
@@ -151,6 +173,12 @@ if ticker:
 
     # Display the table
     st.markdown(table_header + "".join(table_rows) + table_footer, unsafe_allow_html=True)
+
+    # Display description in collapsible section
+    description = info.get('description', '')
+    if description:
+        with st.expander("📄 Company Description"):
+            st.write(description)
 
     st.divider()
 

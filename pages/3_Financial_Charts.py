@@ -1,4 +1,4 @@
-import yfinance as yf
+import fmp_client as yf
 import streamlit as st
 import pandas as pd
 import logging
@@ -13,28 +13,64 @@ elif "ticker" in st.query_params:
 else:
     stock_ticker = ""
 
+if not stock_ticker:
+    st.warning("Please enter a stock ticker")
+    st.stop()
+
 try:
     stock = yf.Ticker(stock_ticker)
     balance_sheet = stock.balance_sheet
     financials = stock.financials
     cashflow = stock.cashflow
+
 except Exception as e:
-    st.write(f"Error fetching stock data: {e}")
-    
-# Convert DataFrame to plot-friendly format
-balance_sheet = balance_sheet.T  # Transpose for better plotting
-balance_sheet.index = pd.to_datetime(balance_sheet.index)  # Ensure proper datetime format
-balance_sheet.index = balance_sheet.index.strftime('%Y-%m-%d')  # Format to include year
+    st.error(f"Error fetching stock data: {e}")
+    st.stop()
 
-# Convert DataFrame to plot-friendly format
-financials = financials.T  # Transpose for better plotting
-financials.index = pd.to_datetime(financials.index)  # Ensure proper datetime format
-financials.index = financials.index.strftime('%Y-%m-%d')  # Format to include year
+# Show data availability status
+st.info(f"**Data availability for {stock_ticker}:**")
+col1, col2, col3 = st.columns(3)
+with col1:
+    if balance_sheet.empty:
+        st.error("❌ Balance Sheet: Not available")
+    else:
+        st.success(f"✅ Balance Sheet: {balance_sheet.shape[1]} periods")
+with col2:
+    if financials.empty:
+        st.error("❌ Income Statement: Not available")
+    else:
+        st.success(f"✅ Income Statement: {financials.shape[1]} periods")
+with col3:
+    if cashflow.empty:
+        st.error("❌ Cash Flow: Not available")
+    else:
+        st.success(f"✅ Cash Flow: {cashflow.shape[1]} periods")
 
-# Convert DataFrame to plot-friendly format
-cashflow = cashflow.T  # Transpose for better plotting
-cashflow.index = pd.to_datetime(cashflow.index)  # Ensure proper datetime format
-cashflow.index = cashflow.index.strftime('%Y-%m-%d')  # Format to include year
+# Check if all dataframes are empty
+if balance_sheet.empty and financials.empty and cashflow.empty:
+    st.error(f"No financial data available for {stock_ticker}. Free tier may not support this stock.")
+    st.stop()
+
+st.divider()
+
+# Convert DataFrame to plot-friendly format (only if not empty)
+if not balance_sheet.empty:
+    balance_sheet = balance_sheet.T
+    if len(balance_sheet.index) > 0:
+        balance_sheet.index = pd.to_datetime(balance_sheet.index)
+        balance_sheet.index = balance_sheet.index.strftime('%Y-%m-%d')
+
+if not financials.empty:
+    financials = financials.T
+    if len(financials.index) > 0:
+        financials.index = pd.to_datetime(financials.index)
+        financials.index = financials.index.strftime('%Y-%m-%d')
+
+if not cashflow.empty:
+    cashflow = cashflow.T
+    if len(cashflow.index) > 0:
+        cashflow.index = pd.to_datetime(cashflow.index)
+        cashflow.index = cashflow.index.strftime('%Y-%m-%d')
 
 # logging.info(dir(cashflow))
 # logging.info(cashflow.columns)
@@ -42,17 +78,17 @@ cashflow.index = cashflow.index.strftime('%Y-%m-%d')  # Format to include year
 
 financials_metrics = st.multiselect(
     "Financials Metrics",
-    financials.columns,
+    financials.columns if not financials.empty else [],
 )
 
 balance_sheet_metrics = st.multiselect(
     "Balance Sheet Metrics",
-    balance_sheet.columns,
+    balance_sheet.columns if not balance_sheet.empty else [],
 )
 
 cashflow_metrics = st.multiselect(
     "CashFlow Metrics",
-    cashflow.columns,
+    cashflow.columns if not cashflow.empty else [],
 )
 
 elements = sorted(balance_sheet_metrics + cashflow_metrics + financials_metrics)

@@ -28,8 +28,8 @@ def dcf(free_cash_flow: list[int], shares_outstanding: int) -> float:
         free_cash_flow[-1] * (1 + cash_flow_growth_rate) ** year for year in years
     ]
 
-    # Terminal Value
-    terminal_value = free_cash_flow[-1] * (1 + perpetual_rate) / (required_rate - perpetual_rate)
+    # Terminal Value (using last projected FCF, not historical)
+    terminal_value = future_free_cash_flow[-1] * (1 + perpetual_rate) / (required_rate - perpetual_rate)
 
     # Discount Factor and Present Value
     discount_factor = [(1 + required_rate) ** year for year in years]

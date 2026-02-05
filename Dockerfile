@@ -1,10 +1,12 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
-RUN mkdir /app
+RUN apt-get update \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 CMD ["streamlit", "run", "Ticker_data.py", "--browser.gatherUsageStats", "false"]
-
